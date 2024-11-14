@@ -50,26 +50,40 @@
             width: 200px;
             text-align: center;
             cursor: pointer;
+            position: relative;
         }
         .category h3 {
             margin: 0;
             font-size: 1.5em;
         }
-        .add-category {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            background-color: #3182ce;
+        .delete-category {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background-color: #e53e3e;
             color: #fff;
             border: none;
             border-radius: 50%;
-            width: 60px;
-            height: 60px;
-            font-size: 2em;
+            width: 30px;
+            height: 30px;
             display: flex;
             align-items: center;
             justify-content: center;
             cursor: pointer;
+        }
+        .add-category {
+            background-color: #2d3748;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            width: 200px;
+            text-align: center;
+            cursor: pointer;
+        }
+        .add-category h3 {
+            margin: 0;
+            font-size: 1.5em;
+            color: #3182ce;
         }
         .modal {
             display: none;
@@ -135,36 +149,24 @@
             <h1>SI TITIP</h1>
         </div>
         <div class="balance">
-            <h2>Total Balance: Rp <span id="totalBalance">0</span></h2>
+            <h2>Total Saldo: Rp <span id="totalBalance">0</span></h2>
         </div>
         <div class="categories" id="categoriesContainer">
-            <div class="category" onclick="openCategoryModal('Savings')">
-                <h3>Savings</h3>
-            </div>
-            <div class="category" onclick="openCategoryModal('Investments')">
-                <h3>Investments</h3>
-            </div>
-            <div class="category" onclick="openCategoryModal('Expenses')">
-                <h3>Expenses</h3>
-            </div>
-            <div class="category" onclick="openCategoryModal('Emergency Fund')">
-                <h3>Emergency Fund</h3>
-            </div>
         </div>
-        <button class="add-category" onclick="openAddCategoryModal()">
-            <i class="fas fa-plus"></i>
-        </button>
+        <div class="add-category" onclick="openAddCategoryModal()">
+            <h3>Tambahkan</h3>
+        </div>
     </div>
 
     <div class="modal" id="categoryModal">
         <div class="modal-content">
-            <h3 id="categoryTitle">Category</h3>
-            <h4 id="categoryBalance">Balance: Rp 0</h4>
+            <h3 id="categoryTitle">Nama Simpanan</h3>
+            <h4 id="categoryBalance">Saldo: Rp 0</h4>
             <input type="number" id="amount" placeholder="Amount">
-            <button onclick="addTransaction('add')">Add</button>
-            <button onclick="addTransaction('subtract')">Subtract</button>
+            <button onclick="addTransaction('add')">Tambah</button>
+            <button onclick="addTransaction('subtract')">Kurang</button>
             <div class="transaction-history">
-                <h4>Transaction History</h4>
+                <h4>Riwayat Transaksi</h4>
                 <ul id="transactionList">
                 </ul>
             </div>
@@ -173,19 +175,14 @@
 
     <div class="modal" id="addCategoryModal">
         <div class="modal-content">
-            <h3>Add Category</h3>
+            <h3>Tambah Nama</h3>
             <input type="text" id="newCategoryName" placeholder="Category Name">
             <button onclick="addCategory()">Add</button>
         </div>
     </div>
 
     <script>
-        let categories = {
-            'Savings': { balance: 0, transactions: [] },
-            'Investments': { balance: 0, transactions: [] },
-            'Expenses': { balance: 0, transactions: [] },
-            'Emergency Fund': { balance: 0, transactions: [] }
-        };
+        let categories = {};
 
         function updateTotalBalance() {
             let totalBalance = 0;
@@ -239,12 +236,26 @@
                 const categoriesContainer = document.getElementById('categoriesContainer');
                 const newCategory = document.createElement('div');
                 newCategory.className = 'category';
-                newCategory.innerHTML = `<h3>${newCategoryName}</h3>`;
+                newCategory.innerHTML = `<h3>${newCategoryName}</h3><button class="delete-category" onclick="deleteCategory(event, '${newCategoryName}')"><i class="fas fa-trash"></i></button>`;
                 newCategory.setAttribute('onclick', `openCategoryModal('${newCategoryName}')`);
                 categoriesContainer.appendChild(newCategory);
                 document.getElementById('addCategoryModal').style.display = 'none';
                 document.getElementById('newCategoryName').value = ''; // Clear input field
             }
+        }
+
+        function deleteCategory(event, categoryName) {
+            event.stopPropagation();
+            delete categories[categoryName];
+            const categoriesContainer = document.getElementById('categoriesContainer');
+            const categoryElements = categoriesContainer.getElementsByClassName('category');
+            for (let i = 0; i < categoryElements.length; i++) {
+                if (categoryElements[i].innerText.includes(categoryName)) {
+                    categoriesContainer.removeChild(categoryElements[i]);
+                    break;
+                }
+            }
+            updateTotalBalance();
         }
 
         window.onclick = function(event) {
