@@ -1,0 +1,259 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SI TITIP</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #1a202c;
+            color: #cbd5e0;
+        }
+        .container {
+            width: 90%;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 2.5em;
+        }
+        .balance {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .balance h2 {
+            margin: 0;
+            font-size: 2em;
+        }
+        .categories {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            justify-content: center;
+        }
+        .category {
+            background-color: #2d3748;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            width: 200px;
+            text-align: center;
+            cursor: pointer;
+        }
+        .category h3 {
+            margin: 0;
+            font-size: 1.5em;
+        }
+        .add-category {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background-color: #3182ce;
+            color: #fff;
+            border: none;
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            font-size: 2em;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-content {
+            background-color: #2d3748;
+            padding: 20px;
+            border-radius: 8px;
+            width: 300px;
+            text-align: center;
+        }
+        .modal-content h3 {
+            margin: 0 0 20px 0;
+        }
+        .modal-content input {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #4a5568;
+            border-radius: 4px;
+            background-color: #1a202c;
+            color: #cbd5e0;
+        }
+        .modal-content button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            background-color: #3182ce;
+            color: #fff;
+            cursor: pointer;
+        }
+        .transaction-history {
+            margin-top: 20px;
+        }
+        .transaction-history h4 {
+            margin: 0 0 10px 0;
+        }
+        .transaction-history ul {
+            list-style: none;
+            padding: 0;
+        }
+        .transaction-history li {
+            background-color: #4a5568;
+            padding: 10px;
+            border-radius: 4px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>SI TITIP</h1>
+        </div>
+        <div class="balance">
+            <h2>Total Balance: Rp <span id="totalBalance">0</span></h2>
+        </div>
+        <div class="categories" id="categoriesContainer">
+            <div class="category" onclick="openCategoryModal('Savings')">
+                <h3>Savings</h3>
+            </div>
+            <div class="category" onclick="openCategoryModal('Investments')">
+                <h3>Investments</h3>
+            </div>
+            <div class="category" onclick="openCategoryModal('Expenses')">
+                <h3>Expenses</h3>
+            </div>
+            <div class="category" onclick="openCategoryModal('Emergency Fund')">
+                <h3>Emergency Fund</h3>
+            </div>
+        </div>
+        <button class="add-category" onclick="openAddCategoryModal()">
+            <i class="fas fa-plus"></i>
+        </button>
+    </div>
+
+    <div class="modal" id="categoryModal">
+        <div class="modal-content">
+            <h3 id="categoryTitle">Category</h3>
+            <h4 id="categoryBalance">Balance: Rp 0</h4>
+            <input type="number" id="amount" placeholder="Amount">
+            <button onclick="addTransaction('add')">Add</button>
+            <button onclick="addTransaction('subtract')">Subtract</button>
+            <div class="transaction-history">
+                <h4>Transaction History</h4>
+                <ul id="transactionList">
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="addCategoryModal">
+        <div class="modal-content">
+            <h3>Add Category</h3>
+            <input type="text" id="newCategoryName" placeholder="Category Name">
+            <button onclick="addCategory()">Add</button>
+        </div>
+    </div>
+
+    <script>
+        let categories = {
+            'Savings': { balance: 0, transactions: [] },
+            'Investments': { balance: 0, transactions: [] },
+            'Expenses': { balance: 0, transactions: [] },
+            'Emergency Fund': { balance: 0, transactions: [] }
+        };
+
+        function updateTotalBalance() {
+            let totalBalance = 0;
+            for (let category in categories) {
+                totalBalance += categories[category].balance;
+            }
+            document.getElementById('totalBalance').innerText = totalBalance.toLocaleString('id-ID');
+        }
+
+        function openCategoryModal(category) {
+            document.getElementById('categoryTitle').innerText = category;
+            document.getElementById('categoryBalance').innerText = `Balance: Rp ${categories[category].balance.toLocaleString('id-ID')}`;
+            document.getElementById('categoryModal').style.display = 'flex';
+            const transactionList = document.getElementById('transactionList');
+            transactionList.innerHTML = ''; // Clear previous transactions
+            categories[category].transactions.forEach(transaction => {
+                const transactionItem = document.createElement('li');
+                transactionItem.innerHTML = `<span>${transaction.date}</span><span>${transaction.type === 'add' ? '+' : '-'} Rp ${transaction.amount.toLocaleString('id-ID')}</span>`;
+                transactionList.appendChild(transactionItem);
+            });
+        }
+
+        function openAddCategoryModal() {
+            document.getElementById('addCategoryModal').style.display = 'flex';
+        }
+
+        function addTransaction(type) {
+            const amount = parseFloat(document.getElementById('amount').value);
+            const category = document.getElementById('categoryTitle').innerText;
+            if (type === 'add') {
+                categories[category].balance += amount;
+            } else {
+                categories[category].balance -= amount;
+            }
+            document.getElementById('categoryBalance').innerText = `Balance: Rp ${categories[category].balance.toLocaleString('id-ID')}`;
+            document.getElementById('amount').value = '';
+            updateTotalBalance();
+            const transactionList = document.getElementById('transactionList');
+            const date = new Date();
+            const dateString = date.toLocaleDateString('id-ID') + ' ' + date.toLocaleTimeString('id-ID');
+            const transactionItem = document.createElement('li');
+            transactionItem.innerHTML = `<span>${dateString}</span><span>${type === 'add' ? '+' : '-'} Rp ${amount.toLocaleString('id-ID')}</span>`;
+            transactionList.appendChild(transactionItem);
+            categories[category].transactions.push({ date: dateString, type: type, amount: amount });
+        }
+
+        function addCategory() {
+            const newCategoryName = document.getElementById('newCategoryName').value;
+            if (newCategoryName && !categories[newCategoryName]) {
+                categories[newCategoryName] = { balance: 0, transactions: [] };
+                const categoriesContainer = document.getElementById('categoriesContainer');
+                const newCategory = document.createElement('div');
+                newCategory.className = 'category';
+                newCategory.innerHTML = `<h3>${newCategoryName}</h3>`;
+                newCategory.setAttribute('onclick', `openCategoryModal('${newCategoryName}')`);
+                categoriesContainer.appendChild(newCategory);
+                document.getElementById('addCategoryModal').style.display = 'none';
+                document.getElementById('newCategoryName').value = ''; // Clear input field
+            }
+        }
+
+        window.onclick = function(event) {
+            if (event.target.classList.contains('modal')) {
+                event.target.style.display = 'none';
+            }
+        }
+
+        updateTotalBalance();
+    </script>
+</body>
+</html>
