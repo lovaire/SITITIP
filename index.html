@@ -2,7 +2,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SI TITIP</title>
+    <title>Si Titip</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
@@ -146,7 +146,7 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>SI TITIP</h1>
+            <h1>Si Titip</h1>
         </div>
         <div class="balance">
             <h2>Total Saldo: Rp <span id="totalBalance">0</span></h2>
@@ -160,7 +160,7 @@
 
     <div class="modal" id="categoryModal">
         <div class="modal-content">
-            <h3 id="categoryTitle">Nama Simpanan</h3>
+            <h3 id="categoryTitle">Category</h3>
             <h4 id="categoryBalance">Saldo: Rp 0</h4>
             <input type="number" id="amount" placeholder="Amount">
             <button onclick="addTransaction('add')">Tambah</button>
@@ -182,7 +182,7 @@
     </div>
 
     <script>
-        let categories = {};
+        let categories = JSON.parse(localStorage.getItem('categories')) || {};
 
         function updateTotalBalance() {
             let totalBalance = 0;
@@ -227,6 +227,7 @@
             transactionItem.innerHTML = `<span>${dateString}</span><span>${type === 'add' ? '+' : '-'} Rp ${amount.toLocaleString('id-ID')}</span>`;
             transactionList.appendChild(transactionItem);
             categories[category].transactions.push({ date: dateString, type: type, amount: amount });
+            localStorage.setItem('categories', JSON.stringify(categories));
         }
 
         function addCategory() {
@@ -241,6 +242,7 @@
                 categoriesContainer.appendChild(newCategory);
                 document.getElementById('addCategoryModal').style.display = 'none';
                 document.getElementById('newCategoryName').value = ''; // Clear input field
+                localStorage.setItem('categories', JSON.stringify(categories));
             }
         }
 
@@ -256,6 +258,18 @@
                 }
             }
             updateTotalBalance();
+            localStorage.setItem('categories', JSON.stringify(categories));
+        }
+
+        function loadCategories() {
+            const categoriesContainer = document.getElementById('categoriesContainer');
+            for (let category in categories) {
+                const newCategory = document.createElement('div');
+                newCategory.className = 'category';
+                newCategory.innerHTML = `<h3>${category}</h3><button class="delete-category" onclick="deleteCategory(event, '${category}')"><i class="fas fa-trash"></i></button>`;
+                newCategory.setAttribute('onclick', `openCategoryModal('${category}')`);
+                categoriesContainer.appendChild(newCategory);
+            }
         }
 
         window.onclick = function(event) {
@@ -264,6 +278,7 @@
             }
         }
 
+        loadCategories();
         updateTotalBalance();
     </script>
 </body>
