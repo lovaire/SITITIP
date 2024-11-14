@@ -4,11 +4,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Si Titip</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body {
-            font-family: 'Roboto', sans-serif;
+            font-family: 'Poppins', sans-serif;
             margin: 0;
             padding: 0;
             background-color: #1a202c;
@@ -122,6 +122,7 @@
             background-color: #3182ce;
             color: #fff;
             cursor: pointer;
+            margin: 5px 0;
         }
         .transaction-history {
             margin-top: 20px;
@@ -140,6 +141,12 @@
             margin-bottom: 10px;
             display: flex;
             justify-content: space-between;
+            align-items: center;
+        }
+        .warning {
+            color: #e53e3e;
+            margin-top: 10px;
+            display: none;
         }
     </style>
 </head>
@@ -165,10 +172,12 @@
             <input type="number" id="amount" placeholder="Amount">
             <button onclick="addTransaction('add')">Tambah</button>
             <button onclick="addTransaction('subtract')">Kurang</button>
+            <div class="warning" id="warningMessage">Tidak boleh kosong</div>
             <div class="transaction-history">
                 <h4>Riwayat Transaksi</h4>
                 <ul id="transactionList">
                 </ul>
+                <button onclick="undoTransaction()">Undo</button>
             </div>
         </div>
     </div>
@@ -210,24 +219,58 @@
         }
 
         function addTransaction(type) {
-            const amount = parseFloat(document.getElementById('amount').value);
+            const amountInput = document.getElementById('amount');
+            const amount = parseFloat(amountInput.value);
             const category = document.getElementById('categoryTitle').innerText;
+            const warningMessage = document.getElementById('warningMessage');
+
+            if (!amountInput.value) {
+                warningMessage.style.display = 'block';
+                return;
+            } else {
+                warningMessage.style.display = 'none';
+            }
+
             if (type === 'add') {
                 categories[category].balance += amount;
             } else {
                 categories[category].balance -= amount;
             }
             document.getElementById('categoryBalance').innerText = `Balance: Rp ${categories[category].balance.toLocaleString('id-ID')}`;
-            document.getElementById('amount').value = '';
+            amountInput.value = '';
             updateTotalBalance();
             const transactionList = document.getElementById('transactionList');
             const date = new Date();
             const dateString = date.toLocaleDateString('id-ID') + ' ' + date.toLocaleTimeString('id-ID');
-            const transactionItem = document.createElement('li');
-            transactionItem.innerHTML = `<span>${dateString}</span><span>${type === 'add' ? '+' : '-'} Rp ${amount.toLocaleString('id-ID')}</span>`;
-            transactionList.appendChild(transactionItem);
-            categories[category].transactions.push({ date: dateString, type: type, amount: amount });
+            const transactionItem = { date: dateString, type: type, amount: amount };
+            categories[category].transactions.push(transactionItem);
+            const li = document.createElement('li');
+            li.innerHTML = `<span>${dateString}</span><span>${type === ' add' ? '+' : '-'} Rp ${amount.toLocaleString('id-ID')}</span>`;
+            transactionList.appendChild(li);
             localStorage.setItem('categories', JSON.stringify(categories));
+        }
+
+        function undoTransaction() {
+            const category = document.getElementById('categoryTitle').innerText;
+            const transactions = categories[category].transactions;
+            if (transactions.length > 0) {
+                const lastTransaction = transactions.pop();
+                if (lastTransaction.type === 'add') {
+                    categories[category].balance -= lastTransaction.amount;
+                } else {
+                    categories[category].balance += lastTransaction.amount;
+                }
+                document.getElementById('categoryBalance').innerText = `Balance: Rp ${categories[category].balance.toLocaleString('id-ID')}`;
+                updateTotalBalance();
+                const transactionList = document.getElementById('transactionList');
+                transactionList.innerHTML = ''; // Clear previous transactions
+                transactions.forEach(transaction => {
+                    const transactionItem = document.createElement('li');
+                    transactionItem.innerHTML = `<span>${transaction.date}</span><span>${transaction.type === 'add' ? '+' : '-'} Rp ${transaction.amount.toLocaleString('id-ID')}</span>`;
+                    transactionList.appendChild(transactionItem);
+                });
+                localStorage.setItem('categories', JSON.stringify(categories));
+            }
         }
 
         function addCategory() {
