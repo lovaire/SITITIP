@@ -4,11 +4,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Si Titip</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet"> <!-- Mengganti font -->
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body {
-            font-family: 'Poppins', sans-serif;
+            font-family: 'Roboto', sans-serif; /* Mengganti font */
             margin: 0;
             padding: 0;
             background-color: #87ceeb;
@@ -38,7 +38,7 @@
         }
         .categories {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); /* Two columns */
+            grid-template-columns: repeat(2, 1fr); /* Dua kolom */
             gap: 20px;
             justify-items: center;
         }
@@ -52,10 +52,12 @@
             position: relative;
             opacity: 0;
             animation: fadeIn 0.5s forwards;
+            width: 100%; /* Memastikan kategori memenuhi lebar kolom */
         }
         .category h3 {
             margin: 0;
             font-size: 1.3em;
+            color: #ffffff; /* Warna teks kategori */
         }
         .delete-category {
             position: absolute;
