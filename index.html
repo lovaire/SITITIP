@@ -152,6 +152,14 @@
             justify-content: space-between;
             align-items: center;
         }
+        .edit-transaction, .delete-transaction {
+            background: none;
+            border: none;
+            color: #fff;
+            cursor: pointer;
+            font-size: 0.8em;
+            margin-left: 10px;
+        }
         .warning {
             color: #fc0303;
             margin-top: 10px;
@@ -188,6 +196,7 @@
         <div class="modal-content">
             <h3 id="categoryTitle">Category</h3>
             <h4 id="categoryBalance">Saldo: Rp 0</h4>
+            <input type="text" id="transactionName" placeholder="Nama Transaksi">
             <input type="number" id="amount" placeholder="Amount">
             <button onclick="addTransaction('add')">Tambah</button>
             <button onclick="addTransaction('subtract')">Kurang</button>
@@ -196,7 +205,6 @@
                 <h4>Riwayat Transaksi</h4>
                 <ul id="transactionList">
                 </ul>
-                <button onclick="undoTransaction()">Undo</button>
             </div>
         </div>
     </div>
@@ -226,9 +234,13 @@
             document.getElementById('categoryModal').style.display = 'flex';
             const transactionList = document.getElementById('transactionList');
             transactionList.innerHTML = ''; // Clear previous transactions
-            categories[category].transactions.forEach(transaction => {
+            categories[category].transactions.forEach((transaction, index) => {
                 const transactionItem = document.createElement('li');
-                transactionItem.innerHTML = `<span>${transaction.date}</span><span>${transaction.type === 'add' ? '+' : '-'} Rp ${transaction.amount.toLocaleString('id-ID')}</span>`;
+                transactionItem.innerHTML = `
+                    <span>${transaction.name}: Rp ${transaction.amount.toLocaleString('id-ID')}</span>
+                    <button class="edit-transaction" onclick="editTransaction('${category}', ${index})"><i class="fas fa-pencil-alt"></i></button>
+                    <button class="delete-transaction" onclick="deleteTransaction('${category}', ${index})"><i class="fas fa-trash"></i></button>
+                `;
                 transactionList.appendChild(transactionItem);
             });
         }
@@ -239,57 +251,59 @@
 
         function addTransaction(type) {
             const amountInput = document.getElementById('amount');
+            const nameInput = document.getElementById('transactionName');
             const amount = parseFloat(amountInput.value);
             const category = document.getElementById('categoryTitle').innerText;
             const warningMessage = document.getElementById('warningMessage');
 
-            if (!amountInput.value) {
+            if (!amountInput.value || !nameInput.value) {
                 warningMessage.style.display = 'block';
                 return;
             } else {
                 warningMessage.style.display = 'none';
             }
 
+            const transaction = { name: nameInput.value, amount: amount };
+
             if (type === 'add') {
                 categories[category].balance += amount;
+                categories[category].transactions.push(transaction);
             } else {
                 categories[category].balance -= amount;
+                categories[category].transactions.push(transaction);
             }
+
             document.getElementById('categoryBalance').innerText = `Balance: Rp ${categories[category].balance.toLocaleString('id-ID')}`;
             amountInput.value = '';
+            nameInput.value = '';
             updateTotalBalance();
-            const transactionList = document.getElementById('transactionList');
-            const date = new Date();
-            const dateString = date.toLocaleDateString('id-ID') + ' ' + date.toLocaleTimeString('id-ID');
-            const transactionItem = { date: dateString, type: type, amount: amount };
-            categories[category].transactions.push(transactionItem);
-            const li = document.createElement('li');
-            li.innerHTML = `<span>${dateString}</span><span>${type === 'add' ? '+' : '-'} Rp ${amount.toLocaleString('id-ID')}</span>`;
-            transactionList.appendChild(li);
-            localStorage.setItem('categories', JSON.stringify(categories));
+            loadCategories();
         }
 
-        function undoTransaction() {
-            const category = document.getElementById('categoryTitle').innerText;
-            const transactions = categories[category].transactions;
-            if (transactions.length > 0) {
-                const lastTransaction = transactions.pop();
-                if (lastTransaction.type === 'add') {
-                    categories[category].balance -= lastTransaction.amount;
-                } else {
-                    categories[category].balance += lastTransaction.amount;
+        function editTransaction(category, index) {
+            const newName = prompt("Masukkan nama baru untuk transaksi:", categories[category].transactions[index].name);
+            const newAmount = prompt("Masukkan jumlah baru untuk transaksi:", categories[category].transactions[index].amount);
+            if (newName !== null && newAmount !== null) {
+                const amount = parseFloat(newAmount);
+                if (!isNaN(amount)) {
+                    categories[category].transactions[index].name = newName;
+                    categories[category].transactions[index].amount = amount;
+
+                    // Update balance
+                    categories[category].balance += (amount - categories[category].transactions[index].amount);
+                    document.getElementById('categoryBalance').innerText = `Balance: Rp ${categories[category].balance.toLocaleString('id-ID')}`;
+                    updateTotalBalance();
+                    loadCategories();
                 }
-                document.getElementById('categoryBalance').innerText = `Balance: Rp ${categories[category].balance.toLocaleString('id-ID')}`;
-                updateTotalBalance();
-                const transactionList = document.getElementById('transactionList');
-                transactionList.innerHTML = ''; // Clear previous transactions
-                transactions.forEach(transaction => {
-                    const transactionItem = document.createElement('li');
-                    transactionItem.innerHTML = `<span>${transaction.date}</span><span>${transaction.type === 'add' ? '+' : '-'} Rp ${transaction.amount.toLocaleString('id-ID')}</span>`;
-                    transactionList.appendChild(transactionItem);
-                });
-                localStorage.setItem('categories', JSON.stringify(categories));
             }
+        }
+
+        function deleteTransaction(category, index) {
+            categories[category].balance -= categories[category].transactions[index].amount;
+            categories[category].transactions.splice(index, 1); // Hapus transaksi
+            document.getElementById('categoryBalance').innerText = `Balance: Rp ${categories[category].balance.toLocaleString('id-ID')}`;
+            updateTotalBalance();
+            loadCategories();
         }
 
         function addCategory() {
@@ -325,6 +339,7 @@
 
         function loadCategories() {
             const categoriesContainer = document.getElementById('categoriesContainer');
+            categoriesContainer.innerHTML = ''; // Clear previous categories
             for (let category in categories) {
                 const newCategory = document.createElement('div');
                 newCategory.className = 'category';
