@@ -151,6 +151,8 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            opacity: 1;
+            transition: opacity 0.5s ease;
         }
         .edit-transaction, .delete-transaction {
             background: none;
@@ -277,7 +279,7 @@
             amountInput.value = '';
             nameInput.value = '';
             updateTotalBalance();
-            loadCategories();
+            loadCategories(); // Load categories to show the new transaction immediately
         }
 
         function editTransaction(category, index) {
@@ -299,11 +301,15 @@
         }
 
         function deleteTransaction(category, index) {
-            categories[category].balance -= categories[category].transactions[index].amount;
-            categories[category].transactions.splice(index, 1); // Hapus transaksi
-            document.getElementById('categoryBalance').innerText = `Balance: Rp ${categories[category].balance.toLocaleString('id-ID')}`;
-            updateTotalBalance();
-            loadCategories();
+            const transactionItem = document.querySelectorAll('#transactionList li')[index];
+            transactionItem.style.opacity = '0'; // Fade out effect
+            setTimeout(() => {
+                categories[category].balance -= categories[category].transactions[index].amount;
+                categories[category].transactions.splice(index, 1); // Hapus transaksi
+                document.getElementById('categoryBalance').innerText = `Balance: Rp ${categories[category].balance.toLocaleString('id-ID')}`;
+                updateTotalBalance();
+                loadCategories();
+            }, 500); // Delay to allow fade out effect
         }
 
         function addCategory() {
